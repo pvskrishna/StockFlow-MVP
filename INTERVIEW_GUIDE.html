@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>StockFlow MVP — Architecture & Interview Guide</title>
+<style>
+  :root {
+    --fg: #0f172a;
+    --muted: #475569;
+    --bg: #ffffff;
+    --soft: #f8fafc;
+    --border: #e2e8f0;
+    --accent: #4f46e5;
+    --accent-soft: #eef2ff;
+    --code-bg: #0f172a;
+    --code-fg: #e2e8f0;
+    --warn: #b45309;
+    --warn-soft: #fffbeb;
+    --ok: #047857;
+    --ok-soft: #ecfdf5;
+    --danger: #b91c1c;
+    --danger-soft: #fef2f2;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--fg);
+    background: var(--bg);
+    line-height: 1.55;
+    font-size: 15px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 32px 24px 96px; }
+  header.title {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 16px;
+    margin-bottom: 28px;
+  }
+  header.title h1 {
+    font-size: 28px;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  header.title p {
+    margin: 0;
+    color: var(--muted);
+  }
+  nav.toc {
+    background: var(--soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 32px;
+  }
+  nav.toc h2 {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  nav.toc ol {
+    margin: 0;
+    padding-left: 18px;
+    columns: 2;
+    column-gap: 32px;
+  }
+  nav.toc a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  nav.toc a:hover { text-decoration: underline; }
+
+  section { margin: 44px 0; }
+  h2 {
+    font-size: 22px;
+    margin: 0 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+  }
+  h3 {
+    font-size: 17px;
+    margin: 24px 0 8px;
+    color: var(--fg);
+  }
+  h4 {
+    font-size: 15px;
+    margin: 18px 0 6px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  p { margin: 8px 0; }
+  ul, ol { margin: 8px 0; padding-left: 22px; }
+  li { margin: 4px 0; }
+  strong { color: var(--fg); }
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.92em;
+  }
+  pre {
+    background: var(--code-bg);
+    color: var(--code-fg);
+    padding: 14px 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 12px 0;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font-size: inherit;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 18px;
+    font-size: 14px;
+  }
+  th, td {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    background: var(--soft);
+    font-weight: 600;
+  }
+  .callout {
+    border-left: 4px solid var(--accent);
+    background: var(--accent-soft);
+    padding: 12px 14px;
+    border-radius: 6px;
+    margin: 14px 0;
+  }
+  .callout.warn { border-color: var(--warn); background: var(--warn-soft); }
+  .callout.ok { border-color: var(--ok); background: var(--ok-soft); }
+  .callout.danger { border-color: var(--danger); background: var(--danger-soft); }
+  .callout p:first-child { margin-top: 0; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  .qa {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 10px 0;
+    padding: 10px 14px;
+    background: #fff;
+  }
+  .qa > summary {
+    cursor: pointer;
+    font-weight: 600;
+    list-style: none;
+    padding: 4px 0;
+  }
+  .qa > summary::-webkit-details-marker { display: none; }
+  .qa > summary::before {
+    content: "▸";
+    color: var(--accent);
+    margin-right: 8px;
+    display: inline-block;
+    transition: transform 0.15s;
+  }
+  .qa[open] > summary::before { transform: rotate(90deg); }
+  .qa .answer { color: var(--fg); padding-top: 8px; }
+
+  .diagram {
+    background: var(--soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    white-space: pre;
+    overflow-x: auto;
+    line-height: 1.5;
+  }
+
+  .pill {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .pill.ok { background: var(--ok-soft); color: var(--ok); }
+  .pill.danger { background: var(--danger-soft); color: var(--danger); }
+
+  footer {
+    margin-top: 60px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 13px;
+  }
+  @media print {
+    .qa { break-inside: avoid; }
+    .qa > summary::before { content: "•"; }
+    .qa { border: none; padding: 4px 0; }
+    .qa[open] .answer { display: block; }
+    nav.toc { break-inside: avoid; }
+    pre, .diagram { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="title">
+  <h1>StockFlow MVP — Architecture &amp; Interview Guide</h1>
+  <p>Multi-tenant inventory SaaS · Express + Prisma + SQLite · React + Vite + Tailwind · JWT cookie auth · RBAC</p>
+</header>
+
+<nav class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#overview">System Overview</a></li>
+    <li><a href="#data-model">Data Model</a></li>
+    <li><a href="#backend">Backend Walkthrough</a></li>
+    <li><a href="#frontend">Frontend Walkthrough</a></li>
+    <li><a href="#cross-cutting">Cross-cutting Concerns</a></li>
+    <li><a href="#strengths">Strengths to Highlight</a></li>
+    <li><a href="#weaknesses">Honest Weaknesses</a></li>
+    <li><a href="#questions">Interview Questions &amp; Answers</a></li>
+  </ol>
+</nav>
+
+<!-- ============================================================ -->
+<section id="overview">
+<h2>1 · System Overview</h2>
+<p>
+  StockFlow is a multi-tenant inventory SaaS MVP. One Express + Prisma + SQLite API.
+  One React + Vite SPA. JWT in an <code>httpOnly</code> cookie. Every read/write is
+  scoped by <code>organizationId</code> derived from the session.
+</p>
+
+<div class="diagram">Browser (React SPA, port 5173 via Vite proxy)
+   │  fetch /api/* with credentials:'include'  (cookie carries JWT)
+   ▼
+Express API (port 4000)
+   │  cookieParser → requireAuth → requireRole → route handler
+   ▼
+Prisma Client  →  SQLite file (prisma/dev.db)</div>
+
+<p>
+  In <strong>production</strong>, the same Express process serves the built SPA from
+  <code>client/dist</code>, so it's a single deployable artifact
+  (<code>server/src/index.ts</code>).
+</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="data-model">
+<h2>2 · Data Model — <code>prisma/schema.prisma</code></h2>
+
+<table>
+  <thead><tr><th>Model</th><th>Key columns</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>Organization</code></td><td><code>name</code>, <code>defaultLowStockThreshold</code></td><td>tenant root</td></tr>
+    <tr><td><code>User</code></td><td><code>email @unique</code>, <code>passwordHash</code>, <code>organizationId</code>, <code>role</code></td><td>belongs to one org</td></tr>
+    <tr><td><code>Product</code></td><td><code>organizationId</code>, <code>name</code>, <code>sku</code>, <code>quantityOnHand</code>, <code>costPrice</code>, <code>sellingPrice</code>, <code>lowStockThreshold</code>, <code>lastUpdatedBy</code></td><td><code>@@unique([organizationId, sku])</code>, <code>@@index([organizationId])</code></td></tr>
+  </tbody>
+</table>
+
+<h4>Architect's notes</h4>
+<ul>
+  <li><strong>Shared-DB, shared-schema</strong> multi-tenancy with a discriminator (<code>organizationId</code>). Cheap; you must enforce scope in <em>every</em> query.</li>
+  <li><code>SKU</code> is unique <em>per org</em>, not globally — correct for multi-tenant.</li>
+  <li><code>Product.lowStockThreshold</code> nullable; <code>null</code> means "use org default" — classic override-or-fallback.</li>
+  <li><code>onDelete: Cascade</code> from <code>Organization → User/Product</code> is destructive; in real life prefer soft-delete.</li>
+  <li><code>lastUpdatedBy</code> stores the email string, not a <code>userId</code>. Cheap audit; loses referential integrity if the user changes email.</li>
+  <li>Prisma generator is pinned to <code>../server/node_modules/.prisma/client</code> so the workspace doesn't generate into the wrong tree (a real bug fixed in this codebase).</li>
+</ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="backend">
+<h2>3 · Backend Walkthrough — <code>server/src/</code></h2>
+
+<h3>3.1 Bootstrap — <code>index.ts</code></h3>
+<div class="diagram">express()
+ → cors({ origin: env.corsOrigin, credentials: true })   // needed for cookies
+ → express.json({ limit: "1mb" })
+ → cookieParser()
+ → /api/health, /api/auth, /api/products, /api/settings, /api/dashboard, /api/users
+ → static client/dist + SPA fallback (regex excludes /api/)
+ → centralized error handler (logs + 500)</div>
+<ul>
+  <li><strong>CORS + credentials</strong> — must explicitly list origin; <code>*</code> is rejected by browsers when <code>credentials: true</code>.</li>
+  <li><strong>SPA fallback</strong> uses <code>/^(?!\/api\/).*/</code> so deep links return <code>index.html</code>, but <code>/api/...</code> still 404s if not matched.</li>
+  <li>Gaps for prod: no request-ID middleware, no structured logger, no rate limiter.</li>
+</ul>
+
+<h3>3.2 Environment — <code>env.ts</code></h3>
+<p>Throws on missing <code>JWT_SECRET</code> at import time → fail-fast. <code>corsOrigin</code> is comma-separated. Defaults for <code>port</code> and <code>nodeEnv</code>. 12-factor friendly.</p>
+
+<h3>3.3 Database — <code>db.ts</code></h3>
+<p>Single <code>PrismaClient</code> instance. One process = one connection pool. tsx-watch kills the process between reloads so no singleton trick needed.</p>
+
+<h3>3.4 Auth Core — <code>auth.ts</code></h3>
+<h4>Constants &amp; types</h4>
+<ul>
+  <li><code>COOKIE_NAME = "sf_session"</code>, <code>MAX_AGE_MS = 7 days</code>.</li>
+  <li><code>Role = "ADMIN" | "MANAGER" | "GUEST"</code> + <code>ROLES</code> array.</li>
+  <li><code>SessionPayload = { userId, organizationId, email, role }</code> — JWT body.</li>
+</ul>
+
+<h4>Functions</h4>
+<ul>
+  <li><code>signSession(payload)</code> — <code>jwt.sign(payload, env.jwtSecret, { expiresIn: "7d" })</code>. HS256, no <code>kid</code>, no rotation.</li>
+  <li><code>setSessionCookie(res, token)</code> — <code>httpOnly</code> (XSS-resistant), <code>secure</code> in prod, <code>sameSite: "lax"</code> in dev / <code>"none"</code> in prod, 7-day <code>maxAge</code>.</li>
+  <li><code>clearSessionCookie(res)</code> — pairs with logout.</li>
+  <li><code>readSession(req)</code> — returns <code>SessionPayload | null</code>; catches <code>jwt.verify</code> errors.</li>
+  <li><code>requireAuth(req, res, next)</code> — async. Reads session, 401 if missing. <strong>Back-compat:</strong> if JWT lacks <code>role</code> (signed before roles existed), fetch from DB. Real bug fixed in this codebase.</li>
+  <li><code>requireRole(...allowed)</code> — higher-order middleware, same DB-fallback, 403 if role not allowed.</li>
+</ul>
+<div class="callout">
+  <p><strong>Why two layers?</strong> Composition. Read endpoints get just auth; write endpoints chain both. Cheaper to reason about than one mega-middleware.</p>
+</div>
+
+<h3>3.5 Validation — <code>validation.ts</code></h3>
+<p>Zod schemas at the boundary. Custom transformers turn <code>""</code>, <code>null</code>, and string numbers into proper <code>number | null</code>. <code>productUpdateSchema = productCreateSchema.partial()</code>. TypeScript trusts you; the network doesn't.</p>
+
+<h3>3.6 Auth Routes — <code>auth.routes.ts</code></h3>
+<table>
+  <thead><tr><th>Route</th><th>Auth</th><th>Behavior</th></tr></thead>
+  <tbody>
+    <tr><td><code>POST /signup</code></td><td>public</td><td>creates Org + User in a nested write, bcrypt(10), signs JWT, sets cookie, returns user.</td></tr>
+    <tr><td><code>POST /login</code></td><td>public</td><td>finds user by email, <code>bcrypt.compare</code>, issues JWT.</td></tr>
+    <tr><td><code>POST /logout</code></td><td>public</td><td>clears cookie.</td></tr>
+    <tr><td><code>GET /me</code></td><td>requireAuth</td><td>returns <code>{ user, organization }</code>.</td></tr>
+    <tr><td><code>GET /session</code></td><td>public</td><td>always 200; returns <code>{ user: null }</code> if not logged in. Re-reads role from DB so role changes propagate without re-login.</td></tr>
+  </tbody>
+</table>
+<div class="callout">
+  <p><strong>Key design decision:</strong> <code>/session</code> returns 200-with-null rather than 401 so the SPA bootstrap doesn't have to treat "not logged in yet" as an error.</p>
+</div>
+
+<h3>3.7 Products Routes — <code>products.routes.ts</code></h3>
+<pre><code>const canWrite  = requireRole("ADMIN", "MANAGER");
+const canDelete = requireRole("ADMIN");</code></pre>
+<ul>
+  <li><code>GET /</code> — list, <code>?q=</code> search across <code>name</code>+<code>sku</code>. Org-scoped.</li>
+  <li><code>POST /</code> — <code>canWrite</code>. Validates body, checks SKU uniqueness, sets <code>lastUpdatedBy</code>.</li>
+  <li><code>GET /:id</code>, <code>PUT /:id</code>, <code>DELETE /:id</code> — use <code>findOwned()</code> helper to enforce tenancy. <strong>Critical pattern</strong>: never trust <code>id</code> from path without org filter (IDOR).</li>
+  <li><code>POST /:id/adjust</code> — <code>quantityOnHand + delta</code>. Rejects negative results. <span class="pill warn">race</span> Two concurrent +1s can lose an update. Should use Prisma's atomic <code>{ increment: delta }</code>.</li>
+</ul>
+
+<h3>3.8 Settings Routes — <code>settings.routes.ts</code></h3>
+<ul>
+  <li><code>GET /</code> — any auth user.</li>
+  <li><code>PUT /</code> — ADMIN only; updates <code>defaultLowStockThreshold</code>.</li>
+</ul>
+
+<h3>3.9 Users Routes — <code>users.routes.ts</code></h3>
+<ul>
+  <li><code>GET /</code> — any user can list the org's users (for UI).</li>
+  <li><code>POST /</code> — ADMIN. <strong>Auto-generated temp password</strong> via <code>crypto.randomBytes(4).toString("hex") + crypto.randomInt(10,100)</code> (~36 bits). Returned <em>once</em>; hashed with bcrypt; never re-retrievable.</li>
+  <li><code>PATCH /:id</code> — ADMIN. Org-scoped. Cannot demote the last ADMIN. <span class="pill warn">race</span> count-then-update without a transaction.</li>
+  <li><code>DELETE /:id</code> — ADMIN. Cannot delete self. Cannot delete last ADMIN.</li>
+</ul>
+
+<h3>3.10 Dashboard — <code>dashboard.routes.ts</code></h3>
+<p>One endpoint returns totals + low-stock list. Computed in app code (<code>reduce</code>, <code>filter</code>) rather than SQL aggregation — fine for MVP scale; at 100k products push to <code>groupBy</code>/<code>count</code>.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="frontend">
+<h2>4 · Frontend Walkthrough — <code>client/src/</code></h2>
+
+<h3>4.1 Bootstrap — <code>main.tsx</code></h3>
+<p><code>&lt;StrictMode&gt;&lt;BrowserRouter&gt;&lt;AuthProvider&gt;&lt;App/&gt;&lt;/AuthProvider&gt;&lt;/BrowserRouter&gt;&lt;/StrictMode&gt;</code>. Order matters because <code>App</code> calls <code>useAuth</code>.</p>
+
+<h3>4.2 Routing — <code>App.tsx</code></h3>
+<ul>
+  <li><code>&lt;RequireAuth&gt;</code> — redirect to <code>/login</code> if no user.</li>
+  <li><code>&lt;PublicOnly&gt;</code> — redirect <em>away</em> from <code>/login</code>/<code>/signup</code> if authed.</li>
+  <li>Both wait on <code>loading</code> to avoid flash-of-wrong-route during initial <code>/session</code> fetch.</li>
+</ul>
+
+<h3>4.3 Auth Context — <code>auth.tsx</code></h3>
+<p><code>AuthProvider</code> keeps <code>{ user, organization, loading }</code> and exposes <code>login/signup/logout/refresh</code>. <code>useEffect</code> on mount calls <code>refresh()</code> → <code>/api/auth/session</code>. Mutations call <code>refresh()</code> after success.</p>
+<div class="callout">
+  <p><strong>Why context, not Redux?</strong> Low cardinality, single source of truth, infrequent updates. Adding Redux/Zustand would be overkill.</p>
+</div>
+
+<h3>4.4 API Client — <code>api.ts</code></h3>
+<pre><code>credentials: "include"        // browser attaches httpOnly cookie
+Content-Type: application/json
+throws HttpError(status, msg) on non-2xx
+returns parsed JSON typed by &lt;T&gt;</code></pre>
+<p>The narrow waist of all server calls — auth headers, retries, logging, telemetry can all centralize here.</p>
+
+<h3>4.5 Permission Helpers — <code>permissions.ts</code></h3>
+<pre><code>can.writeProducts(role)   // ADMIN | MANAGER
+can.deleteProducts(role)  // ADMIN
+can.editSettings(role)    // ADMIN
+can.manageUsers(role)     // ADMIN</code></pre>
+<div class="callout warn">
+  <p><strong>UI gating is cosmetic.</strong> The server is the source of truth.</p>
+</div>
+
+<h3>4.6 Layout — <code>components/AppLayout.tsx</code></h3>
+<p>Header with <code>NavLink</code> (active styling), user email, logout button. Renders <code>&lt;Outlet/&gt;</code> for child routes.</p>
+
+<h3>4.7 Pages</h3>
+<table>
+  <thead><tr><th>Page</th><th>Purpose</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td><code>Login.tsx</code> / <code>Signup.tsx</code></td><td>forms calling context methods</td><td>controlled inputs, local error state</td></tr>
+    <tr><td><code>Dashboard.tsx</code></td><td>totals + low-stock list</td><td>single GET on mount; <code>Card</code> sub-component for KPI tiles</td></tr>
+    <tr><td><code>Products.tsx</code></td><td>list + inline ± adjust + delete</td><td>client-side search; gated by <code>canWrite</code>/<code>canDelete</code>; <code>busyId</code> blocks double-clicks</td></tr>
+    <tr><td><code>ProductForm.tsx</code></td><td>create/edit</td><td>single component, <code>mode</code> prop; fields disabled when <code>!canWrite</code></td></tr>
+    <tr><td><code>Settings.tsx</code></td><td>tabbed: General + Users</td><td>local tab state (could be <code>?tab=users</code>)</td></tr>
+    <tr><td><code>Users.tsx</code></td><td>list users, change role inline, invite, delete</td><td>shows generated temp password once with Copy</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============================================================ -->
+<section id="cross-cutting">
+<h2>5 · Cross-cutting Concerns</h2>
+<table>
+  <thead><tr><th>Concern</th><th>Implementation</th><th>Strength</th><th>Weakness</th></tr></thead>
+  <tbody>
+    <tr><td>AuthN</td><td>JWT in httpOnly cookie</td><td>XSS-resistant; CSRF mitigated by <code>sameSite=lax</code></td><td>No refresh token; revocation only on <code>/session</code></td></tr>
+    <tr><td>AuthZ</td><td>RBAC ADMIN &gt; MANAGER &gt; GUEST</td><td>Defense in depth (server + UI)</td><td>Role string in JWT — stale until DB lookup or re-login</td></tr>
+    <tr><td>Multi-tenancy</td><td><code>organizationId</code> filter in every query</td><td>Simple, fast</td><td>One missing filter = data leak</td></tr>
+    <tr><td>Validation</td><td>Zod at API boundary</td><td>Type-safe, single source</td><td>No shared schema between client/server</td></tr>
+    <tr><td>Errors</td><td><code>{ error: string }</code></td><td>Predictable</td><td>No error codes / i18n</td></tr>
+    <tr><td>Logging</td><td><code>console.error</code></td><td>Zero deps</td><td>Unstructured, no request IDs</td></tr>
+    <tr><td>Tests</td><td>none</td><td>—</td><td>—</td></tr>
+    <tr><td>Migrations</td><td><code>prisma migrate deploy</code></td><td>Reproducible</td><td>SQLite ALTER limits will bite Postgres-specific changes</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- ============================================================ -->
+<section id="strengths">
+<h2>6 · Strengths to Highlight</h2>
+<ol>
+  <li><strong>Boundary discipline</strong> — Zod on input, typed <code>api&lt;T&gt;()</code> on output, Prisma types in the middle.</li>
+  <li><strong>Tenant scoping centralized</strong> in helpers like <code>findOwned()</code> — easy to audit.</li>
+  <li><strong>httpOnly cookie + sameSite</strong> instead of <code>localStorage</code> JWT.</li>
+  <li><strong>Defense in depth</strong> for RBAC: UI hides, middleware blocks, "last admin" / "delete self" invariants protected on the server even if the UI lies.</li>
+  <li><strong>Single deploy artifact</strong> in prod (Express serves SPA) — cheap to host.</li>
+  <li><strong><code>/api/auth/session</code> returns 200-with-null</strong> — small but important UX detail.</li>
+</ol>
+</section>
+
+<!-- ============================================================ -->
+<section id="weaknesses">
+<h2>7 · Honest Weaknesses</h2>
+<ul>
+  <li><span class="pill danger">security</span> <strong>No CSRF token.</strong> SameSite=lax catches most attacks but not all.</li>
+  <li><span class="pill danger">security</span> <strong>No rate limiting</strong> on <code>/login</code> / <code>/signup</code> → credential stuffing risk.</li>
+  <li><span class="pill warn">crypto</span> <strong>bcrypt rounds = 10</strong>; raise to 12 in prod.</li>
+  <li><span class="pill warn">feature</span> <strong>No password reset / email verification.</strong></li>
+  <li><span class="pill danger">correctness</span> <strong>Race conditions</strong> in stock <code>adjust</code> and "last admin" invariants. Fix with atomic Prisma ops + transactions.</li>
+  <li><span class="pill warn">infra</span> <strong>SQLite is single-writer</strong> — swap to Postgres for concurrency.</li>
+  <li><span class="pill warn">audit</span> <strong>No audit log</strong> beyond <code>lastUpdatedBy</code>.</li>
+  <li><span class="pill warn">perf</span> <strong>Client-side search</strong> on Products; server already supports <code>?q=</code>.</li>
+  <li><span class="pill warn">UX</span> Inline role dropdown PATCHes on every change with no confirm.</li>
+  <li><span class="pill warn">security</span> <strong>JWT can't be revoked</strong> before expiry — logout only clears the cookie client-side.</li>
+  <li><span class="pill warn">UX</span> <strong>Temp password in HTTP body</strong> — fine over HTTPS but ideally a separate channel (email).</li>
+</ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="questions">
+<h2>8 · Interview Questions &amp; Answers</h2>
+<p style="color:var(--muted)">Click any question to reveal the answer. Grouped by theme.</p>
+
+<h3>System &amp; Architecture</h3>
+
+<details class="qa">
+<summary>1. Walk me through what happens when a user clicks "Sign in".</summary>
+<div class="answer">
+Form → <code>auth.login()</code> → <code>POST /api/auth/login</code> with <code>credentials:'include'</code> → <code>loginSchema</code> validates → <code>bcrypt.compare</code> → <code>signSession</code> → <code>Set-Cookie sf_session</code> (httpOnly) → SPA calls <code>refresh()</code> → <code>GET /session</code> → state updates → <code>navigate('/dashboard')</code>.
+</div>
+</details>
+
+<details class="qa">
+<summary>2. Why JWT in a cookie vs <code>Authorization: Bearer</code> in <code>localStorage</code>?</summary>
+<div class="answer">
+httpOnly cookie isn't readable by JS → XSS can't steal the token. Cost: must handle CSRF (mitigated here with <code>sameSite</code>). Bearer/localStorage is simpler for SPAs but every XSS is game over.
+</div>
+</details>
+
+<details class="qa">
+<summary>3. How is multi-tenancy enforced?</summary>
+<div class="answer">
+Single column <code>organizationId</code>. Every query filters by <code>req.session.organizationId</code>. <code>findOwned()</code> helper enforces ownership on lookups. Risk: any forgotten filter is a tenancy leak. Hardening path: a Prisma extension (<code>$extends.query</code>) that injects <code>organizationId</code> from AsyncLocalStorage, or row-level security on Postgres.
+</div>
+</details>
+
+<details class="qa">
+<summary>4. Where could one tenant read another's data today?</summary>
+<div class="answer">
+Anywhere <code>req.params.id</code> is used without scoping. The code does scope everywhere, but a global Prisma middleware would be belt-and-braces.
+</div>
+</details>
+
+<h3>Auth &amp; RBAC</h3>
+
+<details class="qa">
+<summary>5. Walk me through the RBAC matrix.</summary>
+<div class="answer">
+ADMIN: all. MANAGER: create/update/adjust products; no delete; no settings; no user mgmt. GUEST: read-only. Enforced in <code>requireRole</code> on the server <strong>and</strong> mirrored in <code>permissions.ts</code> for UI gating.
+</div>
+</details>
+
+<details class="qa">
+<summary>6. A user is downgraded ADMIN → GUEST while logged in. What happens?</summary>
+<div class="answer">
+Their JWT still says ADMIN until it's reissued or <code>/session</code> re-reads role from DB. The server <code>requireRole</code> only re-reads from DB if the claim is missing. <strong>Real fix:</strong> always re-read role from DB on guard, or include a <code>tokenVersion</code> in JWT and bump it on role changes.
+</div>
+</details>
+
+<details class="qa">
+<summary>7. How would you revoke a JWT immediately?</summary>
+<div class="answer">
+Add <code>User.tokenVersion: Int</code>. Embed in the JWT. Compare on guard. Increment on role change / forced logout. Or move to opaque session IDs in a Redis store.
+</div>
+</details>
+
+<details class="qa">
+<summary>8. Why is <code>requireAuth</code> async now?</summary>
+<div class="answer">
+To support back-compat with tokens that pre-date the role field. It hits Prisma only when the claim is missing — zero overhead for fresh tokens.
+</div>
+</details>
+
+<h3>Data &amp; Integrity</h3>
+
+<details class="qa">
+<summary>9. Walk me through the +1 stock adjust path. What's wrong?</summary>
+<div class="answer">
+Reads <code>quantityOnHand</code>, computes <code>next = current + delta</code>, updates. Two concurrent calls can both read N and both write N+1 → lost update. Fix: <code>prisma.product.update({ data: { quantityOnHand: { increment: delta } } })</code> (atomic at DB), or wrap in a serializable transaction.
+</div>
+</details>
+
+<details class="qa">
+<summary>10. Prevent qty going below zero atomically. How?</summary>
+<div class="answer">
+DB <code>CHECK</code> constraint (<code>quantityOnHand &gt;= 0</code>) + atomic increment → map constraint violation to 400. Or conditional update <code>WHERE quantityOnHand + delta &gt;= 0</code> and check affected rows.
+</div>
+</details>
+
+<details class="qa">
+<summary>11. Why <code>@@unique([organizationId, sku])</code> and not just <code>@unique</code>?</summary>
+<div class="answer">
+Tenants must be free to choose their own SKUs without colliding across orgs.
+</div>
+</details>
+
+<details class="qa">
+<summary>12. Why are <code>costPrice</code> / <code>sellingPrice</code> <code>Float</code>? Risk?</summary>
+<div class="answer">
+Float = IEEE 754 = rounding errors for money. Use <code>Decimal</code> (Postgres <code>numeric</code>) or integer cents.
+</div>
+</details>
+
+<h3>API Design</h3>
+
+<details class="qa">
+<summary>13. Why does <code>/session</code> return 200 with null instead of 401?</summary>
+<div class="answer">
+It's the SPA's initial bootstrap call. 401 would force "not-logged-in-yet" to be handled as an error. A null-user 200 cleanly encodes absence-of-session in the response shape.
+</div>
+</details>
+
+<details class="qa">
+<summary>14. <code>POST /products</code> can 409. How to make it robust?</summary>
+<div class="answer">
+Current code pre-checks then creates — TOCTOU. Better: rely on the DB unique constraint and catch Prisma's <code>P2002</code>, returning 409. Eliminates the race.
+</div>
+</details>
+
+<details class="qa">
+<summary>15. CORS: why <code>credentials: true</code> and an explicit origin?</summary>
+<div class="answer">
+Browsers block <code>*</code> with credentials. Must enumerate allowed origins and set the credentials flag. Configured via <code>CORS_ORIGIN</code> env var.
+</div>
+</details>
+
+<h3>Frontend</h3>
+
+<details class="qa">
+<summary>16. Why context for auth instead of Redux?</summary>
+<div class="answer">
+Low write frequency, no complex selectors, no time-travel. Context is the right tool. If state grew, I'd consider Zustand / Redux Toolkit / TanStack Query.
+</div>
+</details>
+
+<details class="qa">
+<summary>17. Migrate <code>Products.tsx</code> fetch logic to TanStack Query.</summary>
+<div class="answer">
+<code>useQuery(['products', q], () =&gt; api('/api/products?q=' + q))</code> for reads, <code>useMutation</code> for adjust/delete/create with <code>queryClient.invalidateQueries(['products'])</code> on success. Removes manual <code>reload()</code> calls and adds caching/background refetch.
+</div>
+</details>
+
+<details class="qa">
+<summary>18. Why both <code>RequireAuth</code> and <code>PublicOnly</code>?</summary>
+<div class="answer">
+<code>RequireAuth</code> keeps unauthed users out of app pages. <code>PublicOnly</code> keeps authed users out of login/signup so the form doesn't flash before redirect.
+</div>
+</details>
+
+<details class="qa">
+<summary>19. The Vite proxy — why?</summary>
+<div class="answer">
+SPA on :5173, API on :4000. Without the proxy, dev would need CORS. The proxy makes the SPA think the API is same-origin.
+</div>
+</details>
+
+<h3>Security</h3>
+
+<details class="qa">
+<summary>20. Top 3 security risks here?</summary>
+<div class="answer">
+(1) No CSRF token on state-changing routes (sameSite mitigates but doesn't eliminate). (2) No rate limiting → credential stuffing / signup spam. (3) Float for money → arithmetic bugs that look like fraud.
+</div>
+</details>
+
+<details class="qa">
+<summary>21. Add Google SSO. Where do you hook in?</summary>
+<div class="answer">
+<code>auth.routes.ts</code>: add <code>/auth/google/start</code> (redirect to Google) and <code>/auth/google/callback</code> (exchange code, find-or-create user scoped to existing email or new org, <code>signSession</code> + <code>setSessionCookie</code>). Add <code>provider</code> and <code>providerId</code> columns on <code>User</code>. Decide the "first signup with SSO" → org-creation rule.
+</div>
+</details>
+
+<details class="qa">
+<summary>22. CSRF — explain the mitigation and where it's incomplete.</summary>
+<div class="answer">
+<code>sameSite=lax</code> means the cookie is only sent on top-level same-site navigations / first-party requests. Cross-site POSTs don't include it. But same-origin malicious scripts could still issue requests. Defense in depth: CSRF token (double-submit cookie or per-form) on mutations.
+</div>
+</details>
+
+<h3>Scaling &amp; Ops</h3>
+
+<details class="qa">
+<summary>23. Move from SQLite to Postgres — what changes?</summary>
+<div class="answer">
+<code>provider = "postgresql"</code>, <code>DATABASE_URL</code>, regenerate. Review migrations (SQLite is lax about ALTER). Add connection pooling (PgBouncer / Prisma Accelerate). Push some computations to SQL aggregates.
+</div>
+</details>
+
+<details class="qa">
+<summary>24. How do you horizontally scale this?</summary>
+<div class="answer">
+Stateless API (JWT in cookie, no in-memory session) → N replicas behind a load balancer. DB is the bottleneck → vertical scale + read replicas for dashboard. Redis for rate limits and any caching.
+</div>
+</details>
+
+<details class="qa">
+<summary>25. CPU spikes during dashboard loads — investigate?</summary>
+<div class="answer">
+Add a logger + request IDs. APM via OpenTelemetry. Slow query logs from Postgres. The dashboard route iterates all products in JS — push to SQL <code>count</code> / <code>sum</code> aggregates.
+</div>
+</details>
+
+<details class="qa">
+<summary>26. Add an audit log without breaking the API contract.</summary>
+<div class="answer">
+New <code>AuditEvent</code> model <code>(id, organizationId, userId, action, entityType, entityId, metadata, createdAt)</code>. Wrap mutation handlers (or use Prisma middleware) to write events. Move to an async queue (BullMQ) if it becomes a hot path.
+</div>
+</details>
+
+<details class="qa">
+<summary>27. Support user invites by email. Design it.</summary>
+<div class="answer">
+<code>Invite { id, email, organizationId, role, tokenHash, expiresAt, acceptedAt? }</code>. <code>POST /invites</code> (ADMIN) creates row + emails <code>https://app/accept?token=…</code>. Accept route validates token, creates <code>User</code> with that role + org, signs in. Token is single-use, hashed at rest, 7-day expiry.
+</div>
+</details>
+
+<h3>Architecture / "Principal" Questions</h3>
+
+<details class="qa">
+<summary>28. What would you redesign if you started over?</summary>
+<div class="answer">
+<ul>
+  <li>Postgres from day 1.</li>
+  <li>Wrap Prisma with an org-aware extension so tenancy can't be forgotten.</li>
+  <li>Money in integer cents (or Decimal).</li>
+  <li>TanStack Query + React Hook Form.</li>
+  <li>Replace bespoke fetch wrapper with <code>ky</code> or <code>axios</code>.</li>
+  <li>Add an audit log and a central event emitter.</li>
+  <li>Adopt OpenAPI (or tRPC) so client/server schemas are generated, not duplicated.</li>
+</ul>
+</div>
+</details>
+
+<details class="qa">
+<summary>29. Where's the dead code / overkill?</summary>
+<div class="answer">
+<code>/api/auth/me</code> exists but the SPA only uses <code>/session</code>. Two endpoints doing nearly the same thing — consolidate or document the difference.
+</div>
+</details>
+
+<details class="qa">
+<summary>30. What single test would you write first?</summary>
+<div class="answer">
+An end-to-end test: sign up org A, sign up org B, A creates product X, B tries <code>GET /products/X</code> → expect 404. That one test guards the most catastrophic failure mode (cross-tenant leak).
+</div>
+</details>
+
+</section>
+
+<footer>
+  Generated for interview prep. Source: <code>/Users/t988158/stockflow-mvp</code>. Tip: open this file in a browser and use <em>Print → Save as PDF</em> for an offline copy.
+</footer>
+
+</div>
+</body>
+</html>
